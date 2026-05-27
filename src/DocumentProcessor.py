@@ -1,19 +1,19 @@
-import re
 import html
-from typing import List
+import re
 from pathlib import Path
 
 import pdfplumber
-from pdf2image import convert_from_path
-from PIL import Image
 import pytesseract
 import tiktoken
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from odfdo import Document
-from markitdown import MarkItDown
 from charset_normalizer import detect
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from markitdown import MarkItDown
+from odfdo import Document
+from pdf2image import convert_from_path
+from PIL import Image
 
 from src.Config import Config
+
 
 class DocumentProcessor:
 
@@ -53,12 +53,12 @@ class DocumentProcessor:
             ".xml": self._process_code,
         }
 
-    def get_supported_extensions(self) -> List[str]:
+    def get_supported_extensions(self) -> list[str]:
         """Возвращает список поддерживаемых расширений файлов."""
         exts = list(self._processors.keys())
         return [ext.lstrip(".") for ext in exts]
 
-    def process(self, file_path: str, quick: bool = True) -> List[str]:
+    def process(self, file_path: str, quick: bool = True) -> list[str]:
         """
         Определяет расширение файла и вызывает соответсвующий метод
         для извлечения текста и разбиения на чанки.
@@ -75,7 +75,7 @@ class DocumentProcessor:
         else:
             return self._processors[ext](file_path)
 
-    def _process_text(self, file_path: str) -> List[str]:
+    def _process_text(self, file_path: str) -> list[str]:
         """Обработка текстовых файлов."""
         raw = Path(file_path).read_bytes()
         text = None
@@ -92,9 +92,9 @@ class DocumentProcessor:
             text = raw.decode(encoding, errors="replace")
         return self._splitter.split_text(self._clean_text(text))
 
-    def _process_code(self, file_path: str) -> List[str]:
+    def _process_code(self, file_path: str) -> list[str]:
         """Обработка файлов с кодом."""
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             text = f.read()
         text = text.replace('\r\n', '\n').replace('\r', '\n')
         text = re.sub(r'[\ufeff\u200b\u200c\u200d]', '', text)
@@ -104,13 +104,13 @@ class DocumentProcessor:
         text = text.strip()
         return self._splitter.split_text(text)
 
-    def _process_image(self, file_path: str) -> List[str]:
+    def _process_image(self, file_path: str) -> list[str]:
         """Обработка изображений через OCR."""
         with Image.open(file_path) as image:
             text = pytesseract.image_to_string(image, lang='eng+rus')
         return self._splitter.split_text(self._clean_text(text))
 
-    def _process_pdf(self, pdf_file_path: str, quick=True) -> List[str]:
+    def _process_pdf(self, pdf_file_path: str, quick=True) -> list[str]:
         """Обработка PDF."""
         if quick:
             text = self._quick_extract_from_pdf(pdf_file_path)
@@ -145,26 +145,26 @@ class DocumentProcessor:
         full_text = "\n".join(ocr_texts)
         return self._clean_text(full_text)
 
-    def _process_html(self, file_path: str) -> List[str]:
+    def _process_html(self, file_path: str) -> list[str]:
         """Обработка html."""
         result = self._md.convert(file_path)
         text = result.text_content if result.text_content else ""
         return self._splitter.split_text(self._clean_text(text))
     
-    def _process_odt(self, file_path: str) -> List[str]:
+    def _process_odt(self, file_path: str) -> list[str]:
         """Обработка ODF: преобразование в Markdown через odfdo."""
         document = Document(file_path)
         md_content = document.to_markdown()
         text = md_content if md_content else ""
         return self._splitter.split_text(self._clean_text(text))
 
-    def _process_docx(self, file_path: str) -> List[str]:
+    def _process_docx(self, file_path: str) -> list[str]:
         """Обработка DOCX: преобразование в Markdown через markitdown."""
         result = self._md.convert(file_path)
         text = result.text_content if result.text_content else ""
         return self._splitter.split_text(self._clean_text(text))
 
-    def _process_pptx(self, file_path: str) -> List[str]:
+    def _process_pptx(self, file_path: str) -> list[str]:
         """Обработка PPTX: преобразование в Markdown через markitdown."""
         result = self._md.convert(file_path)
         text = result.text_content if result.text_content else ""

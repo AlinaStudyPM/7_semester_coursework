@@ -1,9 +1,8 @@
-from typing import List, Dict
+import sqlite3
 from datetime import datetime
 
-import sqlite3
-
 from src.Config import Config
+
 
 class ChatHistory:
     """
@@ -17,7 +16,7 @@ class ChatHistory:
         self.chat_id = chat_id
         self.user_id = user_id
         self.config = config
-        self.messages: List[Dict[str, str]] = []
+        self.messages: list[dict[str, str]] = []
 
         # --- SQLite --- 
         self.conn_sqlite3 = sqlite3.connect(config.SQLITE_DB_PATH, check_same_thread=False)

@@ -1,13 +1,15 @@
 # src/MainView.py
-import uuid
+import asyncio
 import tempfile
+import uuid
+
 #import shutil
 from pathlib import Path
+
 import flet as ft
-import asyncio
 
 from src.CoreApp import CoreApp
-from src.FileUploader import FileUploaderBase, FileUploaderWeb, FileUploaderDesktop
+from src.FileUploader import FileUploaderBase
 
 AppColors = {
     "user_message": ft.Colors.BLUE_ACCENT,
@@ -280,7 +282,7 @@ class MainView(ft.View):
     async def open_pickfiles(self, e: ft.ControlEvent):
         """Открывает окно файлового менеджера для загрузки файлов"""
         await self.file_uploader.pick_files()
-        selected_files: List[ft.FilePickerFile] = self.file_uploader.get_selected_files()
+        selected_files: list[ft.FilePickerFile] = self.file_uploader.get_selected_files()
         if len(selected_files) > 0:
             names = [f.name for f in selected_files]
             self.files_label.value = f"Выбрано: {', '.join(names)}"

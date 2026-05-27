@@ -1,9 +1,11 @@
 # src/ChatAgent.py
-import requests
-from typing import List, Dict, Any
+from typing import Any
 
-from src.Config import Config
+import requests
+
 from src.ChromaAdapter import ChromaAdapter
+from src.Config import Config
+
 
 class ChatAgent:
     """
@@ -27,7 +29,7 @@ class ChatAgent:
             return ""
     
         lines = ["\n=== РЕЛЕВАНТНАЯ ИНФОРМАЦИЯ ===\n"]
-        for i, (doc, meta) in enumerate(zip(documents, metadatas), 1):
+        for i, (doc, meta) in enumerate(zip(documents, metadatas, strict=False), 1):
             source = meta.get('source', 'Неизвестный источник')
             lines.append(f"[{i}] Источник: {source}\n{doc}\n")
         lines.append("=== КОНЕЦ КОНТЕКСТА ===\n")
@@ -63,7 +65,7 @@ class ChatAgent:
     def ollama_query(
             self, 
             input_text: str, 
-            history: List[Dict[str, str]], 
+            history: list[dict[str, str]], 
             context: str = None,  
             temperature: float = 0.7, 
             max_history: int = 2
@@ -100,8 +102,8 @@ class ChatAgent:
         except Exception as e:
             return f"Ошибка при запросе к Ollama: {str(e)}"
     
-    def answer_question(self, question: str, chat_history, collection_names: List[str]):
-        raw_results: List[Dict[str, Any]] = []
+    def answer_question(self, question: str, chat_history, collection_names: list[str]):
+        raw_results: list[dict[str, Any]] = []
         for name in collection_names:
             raw = self.chroma_query(name, question)
             if raw["documents"][0]:
@@ -140,7 +142,7 @@ class ChatAgent:
 
         return answer
     
-    def list_models(self) -> List[str]:
+    def list_models(self) -> list[str]:
         """
         Возвращает список моделей, установленных в Ollama.
         """

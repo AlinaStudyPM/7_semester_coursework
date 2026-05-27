@@ -1,7 +1,8 @@
 # src/RAGApp.py
 from src.CoreApp import CoreApp
-from src.FileUploader import FileUploaderWeb, FileUploaderDesktop, FileUploaderConsole
+from src.FileUploader import FileUploaderDesktop, FileUploaderWeb
 from src.FletUI import FletUI
+
 
 class RAGApp:
     """

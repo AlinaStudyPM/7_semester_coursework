@@ -55,3 +55,38 @@ rag-desktop = "src.entrypoints.desktop:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[tool.ruff]
+src = ["src", "tests", "benchmarks"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "data",
+    "logs",
+    "docs",
+    "config",
+    "upload",
+    "tests",
+]
+include = [
+    "src/ChatAgent.py", "src/ChatHistory.py", "src/ChromaAdapter.py",
+    "src/Config.py", "src/CoreApp.py", "src/DocumentProcessor.py",
+    "src/entrypoints/desktop.py", "src/entrypoints/web.py",
+    "src/FileUploader.py", "src/FletUI.py", "src/LoginView.py",
+    "src/MainView.py", "src/RAGApp.py", "src/UserManager.py",
+    "benchmarks/benchmark_utils.py", "benchmarks/config_generation.py",
+    "benchmarks/config_rerank.py", "benchmarks/config_retrieval.py",
+    "benchmarks/dataset.py", "benchmarks/embeddings.py",
+    "benchmarks/eval_generation_dragon.py", "benchmarks/eval_rerank_dragon.py",
+    "benchmarks/eval_retrieval_dragon.py", "benchmarks/judge.py",
+    "benchmarks/metrics.py", "benchmarks/rag_pipeline.py",
+    "benchmarks/result_utils.py", "benchmarks/short_eval_rerank_dragon.py",
+    "benchmarks/short_eval_retrieval_dragon.py"
+]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "PLR2004", "E501", "F841"]
+"benchmarks/**/*.py" = ["E501", "F401", "SIM102"]

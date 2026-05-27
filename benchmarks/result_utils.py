@@ -1,12 +1,13 @@
 # benchmarks/result_utils.py
 
 import json
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from pathlib import Path
+from typing import Any, Optional
 
-import numpy as np
 import matplotlib
+import numpy as np
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -14,14 +15,14 @@ import matplotlib.pyplot as plt
 class RunLogger:
     """Логгер для сохранения конфигурации и промежуточных результатов эксперимента."""
 
-    def __init__(self, run_dir: Path, run_id: Optional[str] = None):
+    def __init__(self, run_dir: Path, run_id: str | None = None):
         self.run_dir = Path(run_dir)
         self.run_dir.mkdir(parents=True, exist_ok=True)
         self.run_id = run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
         self.samples_file = self.run_dir / f"{self.run_id}_samples.jsonl"
         self.config_file = self.run_dir / f"{self.run_id}_config.json"
 
-    def log_config(self, config: Dict[str, Any]) -> None:
+    def log_config(self, config: dict[str, Any]) -> None:
         """Сохраняет конфигурацию эксперимента в JSON файл."""
         payload = {
             "run_id": self.run_id,
@@ -31,7 +32,7 @@ class RunLogger:
         with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
 
-    def log_sample(self, sample: Dict[str, Any]) -> None:
+    def log_sample(self, sample: dict[str, Any]) -> None:
         """Append-only запись промежуточных результатов (сохраняются даже при падении скрипта)."""
         with open(self.samples_file, "a", encoding="utf-8") as f:
             f.write(json.dumps(sample, ensure_ascii=False) + "\n")
@@ -40,33 +41,33 @@ class RunLogger:
 class ResultGeneration:
     """Агрегация, отчёт и визуализация для RQ3 (generation: RAG vs Baseline)."""
 
-    def __init__(self, samples: List[Dict[str, Any]]):
+    def __init__(self, samples: list[dict[str, Any]]):
         self.samples = samples
 
     @classmethod
     def from_jsonl(cls, path: Path):
         """Загружает samples из JSONL файла."""
         samples = []
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             for line in f:
                 if line.strip():
                     samples.append(json.loads(line))
         return cls(samples)
 
     @staticmethod
-    def _mean(values: List[Any]) -> Optional[float]:
+    def _mean(values: list[Any]) -> float | None:
         clean = [v for v in values if v is not None]
         return sum(clean) / len(clean) if clean else None
 
     @staticmethod
-    def _std(values: List[Any]) -> Optional[float]:
+    def _std(values: list[Any]) -> float | None:
         clean = [v for v in values if v is not None]
         if len(clean) < 2:
             return 0.0
         m = sum(clean) / len(clean)
         return (sum((x - m) ** 2 for x in clean) / (len(clean) - 1)) ** 0.5
 
-    def compute_summary(self) -> Dict[str, Any]:
+    def compute_summary(self) -> dict[str, Any]:
         """Вычисляет средние и стандартные отклонения для всех метрик."""
         if not self.samples:
             return {}
@@ -108,7 +109,7 @@ class ResultGeneration:
             "count": len(self.samples),
         }
 
-    def to_markdown(self, path: Optional[Path] = None) -> str:
+    def to_markdown(self, path: Path | None = None) -> str:
         """Генерирует Markdown отчёт со средними и стандартными отклонениями."""
         summary = self.compute_summary()
         lines = [
@@ -297,20 +298,20 @@ class ResultGeneration:
 class ResultRetrieval:
     """Агрегация, отчёт и визуализация для RQ2 (retrieval: влияние top_embed)."""
 
-    def __init__(self, samples_by_embed: Dict[int, List[Dict]]):
+    def __init__(self, samples_by_embed: dict[int, list[dict]]):
         self.samples_by_embed = samples_by_embed
 
     @staticmethod
-    def _mean(values: List[Any]) -> Optional[float]:
+    def _mean(values: list[Any]) -> float | None:
         clean = [v for v in values if v is not None]
         return float(np.mean(clean)) if clean else None
 
     @staticmethod
-    def _std(values: List[Any]) -> Optional[float]:
+    def _std(values: list[Any]) -> float | None:
         clean = [v for v in values if v is not None]
         return float(np.std(clean)) if len(clean) > 1 else 0.0
 
-    def compute_summary(self) -> Dict[str, Any]:
+    def compute_summary(self) -> dict[str, Any]:
         """Вычисляет средние и std для каждого значения top_embed."""
         summary = {
             "top_embeds": [],
@@ -342,7 +343,7 @@ class ResultRetrieval:
 
         return summary
 
-    def to_markdown(self, path: Optional[Path] = None) -> str:
+    def to_markdown(self, path: Path | None = None) -> str:
         """Генерирует Markdown отчёт со средними и стандартными отклонениями."""
         summary = self.compute_summary()
         lines = [
@@ -395,7 +396,7 @@ class ResultRetrieval:
             fontsize=14,
         )
 
-        for ax, (values, title, ylabel) in zip(axes.flat, metrics):
+        for ax, (values, title, ylabel) in zip(axes.flat, metrics, strict=False):
             x = np.arange(len(top_embeds))
             display_vals = [v if v is not None else 0.0 for v in values]
             color = "steelblue" if "Score" in ylabel else "coral"
@@ -408,7 +409,7 @@ class ResultRetrieval:
             ax.set_title(title, fontsize=11, fontweight="bold")
             ax.grid(axis="y", linestyle="--", alpha=0.4)
 
-            for bar, val in zip(bars, values):
+            for bar, val in zip(bars, values, strict=False):
                 height = bar.get_height()
                 label = f"{val:.3f}" if val is not None else "N/A"
                 ax.annotate(
@@ -431,20 +432,20 @@ class ResultRetrieval:
 class ResultRerank:
     """Агрегация, отчёт и визуализация для RQ3 (rerank: влияние top_rerank)."""
 
-    def __init__(self, samples_by_rerank: Dict[int, List[Dict]]):
+    def __init__(self, samples_by_rerank: dict[int, list[dict]]):
         self.samples_by_rerank = samples_by_rerank
 
     @staticmethod
-    def _mean(values: List[Any]) -> Optional[float]:
+    def _mean(values: list[Any]) -> float | None:
         clean = [v for v in values if v is not None]
         return float(np.mean(clean)) if clean else None
 
     @staticmethod
-    def _std(values: List[Any]) -> Optional[float]:
+    def _std(values: list[Any]) -> float | None:
         clean = [v for v in values if v is not None]
         return float(np.std(clean)) if len(clean) > 1 else 0.0
 
-    def compute_summary(self) -> Dict[str, Any]:
+    def compute_summary(self) -> dict[str, Any]:
         """Вычисляет средние и std для каждого значения top_rerank."""
         summary = {
             "top_reranks": [],
@@ -476,7 +477,7 @@ class ResultRerank:
 
         return summary
 
-    def to_markdown(self, path: Optional[Path] = None, top_embed_fixed: int = 20) -> str:
+    def to_markdown(self, path: Path | None = None, top_embed_fixed: int = 20) -> str:
         """Генерирует Markdown отчёт со средними и стандартными отклонениями."""
         summary = self.compute_summary()
         lines = [
@@ -531,7 +532,7 @@ class ResultRerank:
             fontsize=14,
         )
 
-        for ax, (values, title, ylabel) in zip(axes.flat, metrics):
+        for ax, (values, title, ylabel) in zip(axes.flat, metrics, strict=False):
             x = np.arange(len(top_reranks))
             display_vals = [v if v is not None else 0.0 for v in values]
             color = "steelblue" if "Score" in ylabel else "coral"
@@ -544,7 +545,7 @@ class ResultRerank:
             ax.set_title(title, fontsize=11, fontweight="bold")
             ax.grid(axis="y", linestyle="--", alpha=0.4)
 
-            for bar, val in zip(bars, values):
+            for bar, val in zip(bars, values, strict=False):
                 height = bar.get_height()
                 label = f"{val:.3f}" if val is not None else "N/A"
                 ax.annotate(

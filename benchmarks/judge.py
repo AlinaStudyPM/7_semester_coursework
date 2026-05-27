@@ -1,10 +1,9 @@
 # benchmarks/judge.py
-import os
 import asyncio
+import os
 
-from openai import OpenAI, AsyncOpenAI
+from openai import AsyncOpenAI, OpenAI
 from ragas.llms import llm_factory
-
 
 OLLAMA_BASE_URL = "http://localhost:11434/v1"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"

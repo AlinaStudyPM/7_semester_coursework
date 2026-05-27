@@ -1,12 +1,12 @@
 # benchmarks/metrics.py
-from typing import List, Optional
+from typing import Optional
 
 from ragas.metrics.collections import (
+    AnswerCorrectness,
+    AnswerRelevancy,
     ContextPrecision,
     ContextRecall,
     Faithfulness,
-    AnswerCorrectness,
-    AnswerRelevancy,
 )
 
 from benchmarks.embeddings import FastEmbedRagas
@@ -26,7 +26,7 @@ class MetricsManager:
         self._answer_relevancy = AnswerRelevancy(llm=judge, embeddings=embeddings)
 
     @staticmethod
-    def _get_float(result) -> Optional[float]:
+    def _get_float(result) -> float | None:
         if result is None:
             return None
         val = getattr(result, "value", None)
@@ -39,9 +39,9 @@ class MetricsManager:
     def context_precision(
         self,
         question: str,
-        contexts: List[str],
+        contexts: list[str],
         reference: str,
-    ) -> Optional[float]:
+    ) -> float | None:
         result = self._ctx_precision.score(
             user_input=question,
             retrieved_contexts=contexts,
@@ -52,9 +52,9 @@ class MetricsManager:
     def context_recall(
         self,
         question: str,
-        contexts: List[str],
+        contexts: list[str],
         reference: str,
-    ) -> Optional[float]:
+    ) -> float | None:
         result = self._ctx_recall.score(
             user_input=question,
             retrieved_contexts=contexts,
@@ -64,34 +64,34 @@ class MetricsManager:
 
     def context_precision_batch(
         self,
-        questions: List[str],
-        contexts_list: List[List[str]],
-        references: List[str],
-    ) -> List[Optional[float]]:
+        questions: list[str],
+        contexts_list: list[list[str]],
+        references: list[str],
+    ) -> list[float | None]:
         inputs = [
             {
                 "user_input": q,
                 "retrieved_contexts": ctx,
                 "reference": ref,
             }
-            for q, ctx, ref in zip(questions, contexts_list, references)
+            for q, ctx, ref in zip(questions, contexts_list, references, strict=False)
         ]
         results = self._ctx_precision.batch_score(inputs)
         return [self._get_float(r) for r in results]
 
     def context_recall_batch(
         self,
-        questions: List[str],
-        contexts_list: List[List[str]],
-        references: List[str],
-    ) -> List[Optional[float]]:
+        questions: list[str],
+        contexts_list: list[list[str]],
+        references: list[str],
+    ) -> list[float | None]:
         inputs = [
             {
                 "user_input": q,
                 "retrieved_contexts": ctx,
                 "reference": ref,
             }
-            for q, ctx, ref in zip(questions, contexts_list, references)
+            for q, ctx, ref in zip(questions, contexts_list, references, strict=False)
         ]
         results = self._ctx_recall.batch_score(inputs)
         return [self._get_float(r) for r in results]
@@ -104,8 +104,8 @@ class MetricsManager:
         self,
         question: str,
         answer: str,
-        contexts: List[str],
-    ) -> Optional[float]:
+        contexts: list[str],
+    ) -> float | None:
         result = self._faithfulness.score(
             user_input=question,
             response=answer,
@@ -118,7 +118,7 @@ class MetricsManager:
         question: str,
         answer: str,
         ground_truth: str,
-    ) -> Optional[float]:
+    ) -> float | None:
         result = self._answer_correctness.score(
             user_input=question,
             response=answer,
@@ -130,7 +130,7 @@ class MetricsManager:
         self,
         question: str,
         answer: str,
-    ) -> Optional[float]:
+    ) -> float | None:
         result = self._answer_relevancy.score(
             user_input=question,
             response=answer,
@@ -139,49 +139,49 @@ class MetricsManager:
 
     def faithfulness_batch(
         self,
-        questions: List[str],
-        answers: List[str],
-        contexts_list: List[List[str]],
-    ) -> List[Optional[float]]:
+        questions: list[str],
+        answers: list[str],
+        contexts_list: list[list[str]],
+    ) -> list[float | None]:
         inputs = [
             {
                 "user_input": q,
                 "response": a,
                 "retrieved_contexts": ctx,
             }
-            for q, a, ctx in zip(questions, answers, contexts_list)
+            for q, a, ctx in zip(questions, answers, contexts_list, strict=False)
         ]
         results = self._faithfulness.batch_score(inputs)
         return [self._get_float(r) for r in results]
 
     def answer_correctness_batch(
         self,
-        questions: List[str],
-        answers: List[str],
-        ground_truths: List[str],
-    ) -> List[Optional[float]]:
+        questions: list[str],
+        answers: list[str],
+        ground_truths: list[str],
+    ) -> list[float | None]:
         inputs = [
             {
                 "user_input": q,
                 "response": a,
                 "reference": gt,
             }
-            for q, a, gt in zip(questions, answers, ground_truths)
+            for q, a, gt in zip(questions, answers, ground_truths, strict=False)
         ]
         results = self._answer_correctness.batch_score(inputs)
         return [self._get_float(r) for r in results]
 
     def answer_relevancy_batch(
         self,
-        questions: List[str],
-        answers: List[str],
-    ) -> List[Optional[float]]:
+        questions: list[str],
+        answers: list[str],
+    ) -> list[float | None]:
         inputs = [
             {
                 "user_input": q,
                 "response": a,
             }
-            for q, a in zip(questions, answers)
+            for q, a in zip(questions, answers, strict=False)
         ]
         results = self._answer_relevancy.batch_score(inputs)
         return [self._get_float(r) for r in results]

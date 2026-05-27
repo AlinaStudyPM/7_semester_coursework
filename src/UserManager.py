@@ -1,14 +1,14 @@
 
 # src/UserManager.py
-from typing import Dict, List, Optional
-
 import sqlite3
-import bcrypt
 import uuid
 
-from src.Config import Config
+import bcrypt
+
 from src.ChatHistory import ChatHistory
 from src.ChromaAdapter import ChromaAdapter
+from src.Config import Config
+
 
 # TODO: зачем пользователю хранить конфигурацию всей системы?
 # TODO: убрать связь с chroma
@@ -26,8 +26,8 @@ class User:
         self.user_id = user_id
         self.username = username
         self.config = config
-        self.chats: Dict[str, ChatHistory] = {}  # chat_id -> ChatHistory
-        self.collections: Dict[str, str] = {}
+        self.chats: dict[str, ChatHistory] = {}  # chat_id -> ChatHistory
+        self.collections: dict[str, str] = {}
 
         self.chroma_adapter = ChromaAdapter(self.config)
 
@@ -84,12 +84,12 @@ class User:
         self.collections[collection_id] = collection_name
          
     def get_collection_id(self, collection_name: str) -> str:
-        for uuid, name in self.collections.items():
+        for uid, name in self.collections.items():
             if name == collection_name:
-                return uuid
+                return uid
         raise ValueError(f"Коллекция '{collection_name}' не принадлежит пользователю {self.user_id}")
     
-    def list_collections(self) -> List[str]:
+    def list_collections(self) -> list[str]:
         """Возвращает копию списка имён коллекций пользователя."""
         return list(self.collections.values())  
     
@@ -134,7 +134,7 @@ class User:
         """
         return self.chats.get(chat_id)
 
-    def list_chats(self) -> List[str]:
+    def list_chats(self) -> list[str]:
         """
         Возвращает список идентификаторов чатов пользователя.
         """
@@ -165,7 +165,7 @@ class UserManager:
         self.cursor_sqlite3 = self.conn_sqlite3.cursor()
 
         # Словарь пользователей: user_id -> User
-        self.users: Dict[int, User] = {}
+        self.users: dict[int, User] = {}
 
         # Создание таблицы пользователей
         self.cursor_sqlite3.execute("""
@@ -228,7 +228,7 @@ class UserManager:
             user = self.users.pop(user_id)
             user.close()
     
-    def get_user_by_id(self, user_id: int) -> Optional[User]:
+    def get_user_by_id(self, user_id: int) -> User | None:
         """
         Возвращает пользователя по ID (из кэша или БД).
         """
@@ -256,7 +256,7 @@ class UserManager:
         return user
 
     
-    def get_user_by_name(self, username: str) -> Optional[User]:
+    def get_user_by_name(self, username: str) -> User | None:
         """
         Возвращает пользователя по имени.
         """
@@ -282,7 +282,7 @@ class UserManager:
         self.users[user_id] = user
         return user
     
-    def list_users(self) -> List[Dict]:
+    def list_users(self) -> list[dict]:
         """
         Возвращает список всех пользователей.
         """

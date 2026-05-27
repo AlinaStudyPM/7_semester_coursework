@@ -18,13 +18,13 @@ import json
 from pathlib import Path
 
 import benchmarks.config_rerank as cfg
+from benchmarks.benchmark_utils import benchmark_call
 from benchmarks.dataset import load_dragon_data
 from benchmarks.embeddings import FastEmbedRagas
 from benchmarks.judge import get_judge_genapi as get_judge
 from benchmarks.metrics import MetricsManager
 from benchmarks.rag_pipeline import BenchRAG
-from benchmarks.result_utils import RunLogger, ResultRerank
-from benchmarks.benchmark_utils import benchmark_call
+from benchmarks.result_utils import ResultRerank, RunLogger
 
 
 def main():
@@ -108,6 +108,17 @@ def main():
     print("[3/4] Оценка конфигураций реранкера...")
     samples_by_rerank = {}
 
+    def _rag_cycle(query):
+        ctxs = rag.retrieve(
+            query, "dragon",
+            top_embed=args.top_embed,
+            top_rerank=top_rerank,
+            use_rerank=use_rerank,
+        )
+        ans = rag.generate_rag(query, ctxs, temperature=args.temp)
+        return ans, ctxs
+
+
     for top_rerank in args.top_rerank_values:
         use_rerank = top_rerank < args.top_embed  # top_rerank == top_embed → без реранкера
         mode_str = f"top_rerank={top_rerank}" if use_rerank else "без реранкера"
@@ -119,16 +130,6 @@ def main():
         for i, item in enumerate(qa, 1):
             q = item["q"]
             gt = item["gt"]
-
-            def _rag_cycle(query):
-                ctxs = rag.retrieve(
-                    query, "dragon",
-                    top_embed=args.top_embed,
-                    top_rerank=top_rerank,
-                    use_rerank=use_rerank,
-                )
-                ans = rag.generate_rag(query, ctxs, temperature=args.temp)
-                return ans, ctxs
 
             (rag_ans, ctxs), lat, mem = benchmark_call(_rag_cycle, q)
 

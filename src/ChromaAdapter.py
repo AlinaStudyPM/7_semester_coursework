@@ -1,12 +1,13 @@
 # src/ChromaAdapter.py
-from typing import List, Dict, Any, Optional
 import uuid
+from typing import Any
 
 import chromadb
 from fastembed import TextEmbedding
 from fastembed.rerank.cross_encoder import TextCrossEncoder
 
 from src.Config import Config
+
 
 class ChromaAdapter:
     """
@@ -27,7 +28,7 @@ class ChromaAdapter:
             cache_dir="./.fastembed_cache",
         )
 
-    def add_documents(self, collection_name: str, file_name: str, texts: List[str]) -> None:
+    def add_documents(self, collection_name: str, file_name: str, texts: list[str]) -> None:
         """
         Добавляет список файлов в указанную коллекцию Chroma.
         Обрабатывает батчами по 32 документа, чтобы не перегружать CPU/RAM.
@@ -55,10 +56,10 @@ class ChromaAdapter:
     def search(self, 
                collection_name: str, 
                query: str, 
-               top_embed: Optional[int] = None,
-               top_rerank: Optional[int] = None,
+               top_embed: int | None = None,
+               top_rerank: int | None = None,
                use_rerank: bool = True
-        )-> Dict[str, Any]:
+        )-> dict[str, Any]:
         """
         Выполняет семантический поиск по коллекции.
         """
@@ -102,7 +103,7 @@ class ChromaAdapter:
             )
 
             scored_candidates = sorted(
-                zip(rerank_scores, candidate_docs, candidates['ids'][0], candidates['metadatas'][0]),
+                zip(rerank_scores, candidate_docs, candidates['ids'][0], candidates['metadatas'][0], strict=False),
                 key=lambda x: x[0],
                 reverse=True
             )
@@ -115,7 +116,7 @@ class ChromaAdapter:
                 'query': query
             }
 
-    def _rerank_in_batches(self, query: str, documents: List[str], batch_size: int) -> List[float]:
+    def _rerank_in_batches(self, query: str, documents: list[str], batch_size: int) -> list[float]:
         all_scores = []
         for i in range(0, len(documents), batch_size):
             batch = documents[i:i + batch_size]
@@ -123,7 +124,7 @@ class ChromaAdapter:
             all_scores.extend(batch_scores)
         return all_scores
 
-    def list_files(self, collection_name: str) -> List[str]:
+    def list_files(self, collection_name: str) -> list[str]:
         """
         Возвращает отсортированный список уникальных имён файлов,
         присутствующих в коллекции.
@@ -151,7 +152,7 @@ class ChromaAdapter:
         coll = self._client.get_collection(name=collection_name)
         coll.delete(where={"source": file_name})
 
-    def generate_embeddings(self, texts: List[str], batch_size: int = 32):
+    def generate_embeddings(self, texts: list[str], batch_size: int = 32):
         """
         Генерирует эмбеддинги для списка текстов батчами.
         """

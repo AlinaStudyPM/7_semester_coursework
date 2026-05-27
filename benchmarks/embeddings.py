@@ -1,6 +1,6 @@
 # benchmarks/embeddings.py
 import asyncio
-from typing import List
+from pathlib import Path
 
 from fastembed import TextEmbedding
 from ragas.embeddings.base import BaseRagasEmbedding
@@ -11,25 +11,24 @@ class FastEmbedRagas(BaseRagasEmbedding):
         self,
         model_name: str,
         cache_dir: str = "./.fastembed_cache",
-        providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
     ):
         super().__init__()
         self.model = TextEmbedding(model_name=model_name, cache_dir=cache_dir)
 
-    def embed_text(self, text: str, **kwargs) -> List[float]:
+    def embed_text(self, text: str, **kwargs) -> list[float]:
         # fastembed.embed() возвращает итератор; берём первый элемент
         # return list(self.model.embed([text]))[0]
         return next(self.model.embed([text]))
 
-    def embed_texts(self, texts: List[str], **kwargs) -> List[List[float]]:
+    def embed_texts(self, texts: list[str], **kwargs) -> list[list[float]]:
         return list(self.model.embed(texts))
 
-    async def aembed_text(self, text: str, **kwargs) -> List[float]:
+    async def aembed_text(self, text: str, **kwargs) -> list[float]:
         # fastembed синхронный — запускаем в пуле потоков
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self.embed_text, text)
 
-    async def aembed_texts(self, texts: List[str], **kwargs) -> List[List[float]]:
+    async def aembed_texts(self, texts: list[str], **kwargs) -> list[list[float]]:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self.embed_texts, texts)
 

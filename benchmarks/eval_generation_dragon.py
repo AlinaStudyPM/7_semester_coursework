@@ -14,13 +14,13 @@ import json
 from pathlib import Path
 
 import benchmarks.config_generation as cfg
+from benchmarks.benchmark_utils import benchmark_call
 from benchmarks.dataset import load_dragon_data
 from benchmarks.embeddings import FastEmbedRagas
 from benchmarks.judge import get_judge_genapi as get_judge
 from benchmarks.metrics import MetricsManager
 from benchmarks.rag_pipeline import BenchRAG
-from benchmarks.result_utils import RunLogger, ResultGeneration
-from benchmarks.benchmark_utils import benchmark_call
+from benchmarks.result_utils import ResultGeneration, RunLogger
 
 
 def main():

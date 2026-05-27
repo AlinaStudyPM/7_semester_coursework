@@ -13,13 +13,13 @@ import json
 from pathlib import Path
 
 import benchmarks.config_retrieval as cfg
+from benchmarks.benchmark_utils import benchmark_call
 from benchmarks.dataset import load_dragon_data
 from benchmarks.embeddings import FastEmbedRagas
 from benchmarks.judge import get_judge_genapi as get_judge
 from benchmarks.metrics import MetricsManager
 from benchmarks.rag_pipeline import BenchRAG
-from benchmarks.result_utils import RunLogger, ResultRetrieval
-from benchmarks.benchmark_utils import benchmark_call
+from benchmarks.result_utils import ResultRetrieval, RunLogger
 
 
 def main():
@@ -100,6 +100,12 @@ def main():
     print("[3/4] Оценка конфигураций retrieval...")
     samples_by_embed = {}
 
+    def _rag_cycle(query):
+        ctxs = rag.retrieve(query, "dragon", top_embed=top_embed, use_rerank=False)
+        ans = rag.generate_rag(query, ctxs, temperature=args.temp)
+        return ans, ctxs
+
+
     for top_embed in args.top_embed_values:
         print(f"\n>>> top_embed = {top_embed}")
         qs, contexts_list, rag_answers, gts = [], [], [], []
@@ -108,11 +114,6 @@ def main():
         for i, item in enumerate(qa, 1):
             q = item["q"]
             gt = item["gt"]
-
-            def _rag_cycle(query):
-                ctxs = rag.retrieve(query, "dragon", top_embed=top_embed, use_rerank=False)
-                ans = rag.generate_rag(query, ctxs, temperature=args.temp)
-                return ans, ctxs
 
             (rag_ans, ctxs), lat, mem = benchmark_call(_rag_cycle, q)
 

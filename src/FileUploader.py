@@ -1,18 +1,21 @@
 # src/FileUploader.py
+import asyncio
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Dict
-import asyncio
 
+import flet as ft
+
+from src.ChromaAdapter import ChromaAdapter
 from src.Config import Config
 from src.DocumentProcessor import DocumentProcessor
-from src.ChromaAdapter import ChromaAdapter
+
 
 @dataclass
 class UploadedFile:
     name: str
-    path: Optional[str] 
+    path: str | None 
     size: int
 
 class FileUploaderBase(ABC):
@@ -20,7 +23,7 @@ class FileUploaderBase(ABC):
         self.config = config
         self.doc_processor = DocumentProcessor(config)
         self.chroma_adapter = ChromaAdapter(config)
-        self._selected_files: List = []
+        self._selected_files: list = []
         self._extensions = self.doc_processor.get_supported_extensions()
 
     @abstractmethod
@@ -30,16 +33,12 @@ class FileUploaderBase(ABC):
     async def upload_and_process(
         self,
         collection_name: str,
-        file_paths: Optional[List[str]] = None
-    ) -> List[UploadedFile]: ...
+        file_paths: list[str] | None = None
+    ) -> list[UploadedFile]: ...
     
-    def get_selected_files(self) -> List:
+    def get_selected_files(self) -> list:
         return self._selected_files
 
-
-
-import os
-import flet as ft
 
 
 class FileUploaderWeb(FileUploaderBase):
@@ -51,8 +50,8 @@ class FileUploaderWeb(FileUploaderBase):
         super().__init__(config)
         self.upload_dir = config.UPLOAD_DIR
         os.makedirs(self.upload_dir, exist_ok=True)
-        self._selected_files: List[ft.FilePickerFile] = []
-        self._upload_status: Dict[str, asyncio.Event] = {}
+        self._selected_files: list[ft.FilePickerFile] = []
+        self._upload_status: dict[str, asyncio.Event] = {}
 
     def set_page(self, page: ft.Page, process_label):
         self.page = page
@@ -83,7 +82,7 @@ class FileUploaderWeb(FileUploaderBase):
     async def upload_and_process(
             self, 
             collection_name: str
-        ) -> List[UploadedFile]:
+        ) -> list[UploadedFile]:
         """
         1. Загружает выбранные файлы временно на сервер. 
         2. Обрабатывает и индексирует в ChromaDB.
@@ -161,7 +160,7 @@ class FileUploaderDesktop(FileUploaderBase):
     async def upload_and_process(
         self,
         collection_name: str
-    ) -> List[UploadedFile]:
+    ) -> list[UploadedFile]:
         """
         1. Обрабатывает выбранные файлы.
         2. Индексирует в ChromaDB.
@@ -199,7 +198,7 @@ class FileUploaderConsole(FileUploaderBase):
     """
     def __init__(self, config: Config):
         super().__init__(config)
-        self._selected_files: List[str] = []
+        self._selected_files: list[str] = []
 
     async def pick_files(self) -> None:
         """
@@ -210,8 +209,8 @@ class FileUploaderConsole(FileUploaderBase):
     async def upload_and_process(
         self,
         collection_name: str,
-        file_paths: List[str]   
-    ) -> List[UploadedFile]:
+        file_paths: list[str]   
+    ) -> list[UploadedFile]:
         """
         1. Валидирует пути к файлам.
         2. Обрабатывает и индексирует в ChromaDB.

@@ -1,14 +1,15 @@
 # benchmarks/benchmark_utils.py
 import os
+import threading
 import time
 import tracemalloc
-from typing import Callable, Any, Tuple
-import threading
+from collections.abc import Callable
+from typing import Any
 
 import psutil
 
 
-def benchmark_call(func: Callable, *args, **kwargs) -> Tuple[Any, float, float]:
+def benchmark_call(func: Callable, *args, **kwargs) -> tuple[Any, float, float]:
     """
     Оборачивает вызов func, измеряя время выполнения и потребление памяти.
 
@@ -28,7 +29,7 @@ def benchmark_call(func: Callable, *args, **kwargs) -> Tuple[Any, float, float]:
     peak_memory_mb = peak / (1024 * 1024)
     return result, latency, peak_memory_mb
 
-def benchmark_call_psutil(func: Callable, interval_sec: float = 0.05, *args, **kwargs) -> Tuple[Any, float, float]:
+def benchmark_call_psutil(func: Callable, interval_sec: float = 0.05, *args, **kwargs) -> tuple[Any, float, float]:
     """
     Оборачивает вызов func, измеряя время выполнения и пиковое потребление
     памяти текущего процесса Python через psutil с периодическим опросом.

@@ -1,12 +1,11 @@
 # benchmarks/dataset.py
-import os
 import json
+import os
 import random
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import Optional
 
 from datasets import load_dataset
-
 
 # Репозитории на HuggingFace
 HF_REPOS = {
@@ -18,7 +17,7 @@ HF_REPOS = {
 
 DATA_DIR = Path(__file__).parent / "data" / "dragon"
 
-def load_dragon_data(limit: Optional[int] = None, seed: Optional[int] = None):
+def load_dragon_data(limit: int | None = None, seed: int | None = None):
     """
     1. Проверяет наличие датасета в кэше и при необходимости скачивает.
     2. Возвращает набор текстов и заданное количество рандомных вопросов
@@ -53,7 +52,7 @@ def _ensure_dragon_data() -> bool:
     return True
 
 
-def _get_dragon_benchmark() -> Dict[str, List[Dict]]:
+def _get_dragon_benchmark() -> dict[str, list[dict]]:
     return {
         "corpus": _load_corpus(),
         "qa": _load_qa_split(),
@@ -65,7 +64,7 @@ def _download_dragon():
     """
     try:
         token = os.environ.get("HF_TOKEN")
-    except:
+    except KeyError:
         token = None
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -81,21 +80,21 @@ def _download_dragon():
                     f.write(json.dumps(row, ensure_ascii=False) + "\n")
     print(f"\n✅ Все данные сохранены в {DATA_DIR}")
 
-def _load_corpus() -> List[Dict]:
+def _load_corpus() -> list[dict]:
     candidates = sorted(DATA_DIR.glob("public_texts_*.jsonl"))
     docs = []
-    with open(candidates[0], "r", encoding="utf-8") as f:
+    with open(candidates[0], encoding="utf-8") as f:
         for line in f:
             docs.append(json.loads(line))
     return docs
 
 
-def _load_qa_split() -> List[Dict]:
+def _load_qa_split() -> list[dict]:
     candidates = sorted(DATA_DIR.glob("private_qa_*.jsonl"))
     if not candidates:
         candidates = sorted(DATA_DIR.glob("public_questions_*.jsonl"))
     rows = []
-    with open(candidates[0], "r", encoding="utf-8") as f:
+    with open(candidates[0], encoding="utf-8") as f:
         for line in f:
             item = json.loads(line)
             rows.append({
@@ -106,8 +105,8 @@ def _load_qa_split() -> List[Dict]:
     return rows
 """
 def save_results(
-    scores: Dict,
-    config: Dict,
+    scores: dict,
+    config: dict,
     num_evaluated: int,
     output_path: Path,
 ):

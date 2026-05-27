@@ -1,12 +1,11 @@
 # benchmarks/rag_pipeline.py
 import shutil
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
-from src.Config import Config
-from src.ChromaAdapter import ChromaAdapter
 from src.ChatAgent import ChatAgent
-
+from src.ChromaAdapter import ChromaAdapter
+from src.Config import Config
 
 PROMPT_DIR = Path(__file__).parent / "prompts"
 
@@ -33,7 +32,7 @@ class BenchRAG:
 
     def index_passages(
         self,
-        passages: List[str],
+        passages: list[str],
         collection_name: str,
         source_name: str = "dragon",
     ) -> None:
@@ -48,24 +47,24 @@ class BenchRAG:
         self,
         query: str,
         collection_name: str,
-        top_embed: Optional[int] = None,
-        top_rerank: Optional[int] = None,
+        top_embed: int | None = None,
+        top_rerank: int | None = None,
         use_rerank: bool = True
-    ) -> List[str]:
+    ) -> list[str]:
         raw = self.chroma.search(collection_name, query, top_embed, top_rerank, use_rerank)
         return raw["documents"][0] if raw.get("documents") else []
 
     def generate_rag(
         self,
         question: str,
-        contexts: List[str],
+        contexts: list[str],
         temperature: float = 0.7,
     ) -> str:
         data = {
             "documents": [contexts],
             "metadatas": [[{"source": "dragon"}] * len(contexts)],
         }
-        context_block = self.agent.format_results(data, n=len(contexts))
+        context_block = self.agent.format_results(data)
         return self.agent.ollama_query(
             input_text=question,
             history=[],
@@ -91,7 +90,7 @@ class BenchRAG:
             shutil.rmtree(db_path)
 
     @staticmethod
-    def _format_contexts(contexts: List[str]) -> str:
+    def _format_contexts(contexts: list[str]) -> str:
         lines = ["\n=== РЕЛЕВАНТНАЯ ИНФОРМАЦИЯ ===\n"]
         for i, ctx in enumerate(contexts, 1):
             text = ctx[:1000] + "..." if len(ctx) > 1000 else ctx

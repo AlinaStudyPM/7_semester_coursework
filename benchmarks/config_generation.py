@@ -15,4 +15,4 @@ JUDGE_MODEL     = "gpt-4o-mini"
 OPENROUTER_URL  = "https://openrouter.ai/api/v1"
 OLLAMA_URL      = "http://localhost:11434"
 
-DEFAULT_LIMIT = 50
+DEFAULT_LIMIT = 10

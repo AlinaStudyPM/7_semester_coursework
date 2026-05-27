@@ -1,14 +1,12 @@
 # src/CoreApp.py
-import os
-from typing import List, Optional, Dict
 
-import chromadb
 
-from src.Config import Config
-from src.ChromaAdapter import ChromaAdapter
-from src.DocumentProcessor import DocumentProcessor
-from src.UserManager import UserManager, User
 from src.ChatAgent import ChatAgent
+from src.ChromaAdapter import ChromaAdapter
+from src.Config import Config
+from src.DocumentProcessor import DocumentProcessor
+from src.UserManager import User, UserManager
+
 
 class CoreApp:
     """
@@ -23,11 +21,11 @@ class CoreApp:
         self.chat_agent = ChatAgent(self.config, self.chroma_adapter)
 
     #  === USER MANAGEMENT ===
-    def register_user(self, username: str, password: str) -> Optional[User]:
+    def register_user(self, username: str, password: str) -> User | None:
         """Регистрирует нового пользователя."""
         return self.user_manager.register(username, password)
 
-    def authenticate_user(self, username: str, password: str) -> Optional[User]:
+    def authenticate_user(self, username: str, password: str) -> User | None:
         """Аутентифицирует пользователя и загружает его чаты."""
         user = self.user_manager.authenticate(username, password)
         if user is None:
@@ -50,7 +48,7 @@ class CoreApp:
         user = self.user_manager.get_user_by_id(user_id)
         return user.create_chat(chat_id)
 
-    def get_chat_history(self, user_id: int, chat_id: str) -> List[dict]:
+    def get_chat_history(self, user_id: int, chat_id: str) -> list[dict]:
         """Возвращает историю чата в формате[{"role": "...", "content": "..."}, ...]"""
         user = self.user_manager.get_user_by_id(user_id)
         chat_history = user.get_chat(chat_id)
@@ -63,16 +61,16 @@ class CoreApp:
         return chat_history.add_message(role, content)
     
     # === COLLECTIONS ===
-    def get_supported_extensions(self) -> List[str]:
+    def get_supported_extensions(self) -> list[str]:
         """Возвращает список разрешённых расширений файлов."""
         return self.doc_processor.get_supported_extensions()
 
-    def list_user_collections(self, user_id: int) -> List[str]:
+    def list_user_collections(self, user_id: int) -> list[str]:
         """Возвращает список имён коллекций пользователя"""
         user = self.user_manager.get_user_by_id(user_id)
         return user.list_collections()
     
-    def list_user_files(self, user_id: int) -> Dict[str, List[str]]:
+    def list_user_files(self, user_id: int) -> dict[str, list[str]]:
         """Возвращает словарь, в котором по названию коллекции лежит список файлов в ней."""
         user = self.user_manager.get_user_by_id(user_id)
         collections = user.list_collections()
@@ -163,7 +161,7 @@ class CoreApp:
         user_id: int,
         chat_id: str,
         query: str,
-        collection_names: List[str]
+        collection_names: list[str]
     ) -> str:
         """Генерирует ответ на запрос пользователя с учётом контекста и выбранных коллекций."""
         user = self.user_manager.get_user_by_id(user_id)

@@ -1,6 +1,8 @@
 # src/LoginView.py
 import flet as ft
+
 from src.CoreApp import CoreApp
+
 
 class LoginView(ft.View):
     def __init__(self, core: CoreApp, on_login):

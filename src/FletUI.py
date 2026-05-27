@@ -1,9 +1,11 @@
-import os
-import flet as ft
 import asyncio
+import os
+
+import flet as ft
 
 from src.LoginView import LoginView
 from src.MainView import MainView
+
 
 class FletUI:
     def __init__(self, core, uploader):
