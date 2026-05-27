@@ -1,0 +1,36 @@
+name: CI - RAG
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Клонирование репозитория
+        uses: actions/checkout@v4
+
+      - name: Установка Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Установка системных утилит
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-rus tesseract-ocr-eng poppler-utils
+
+      - name: Установка python-зависимостей
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Линтинг и проверка Ruff
+        run: ruff check .
+
+      - name: Модульные тесты
+        run: pytest tests/test_document_processor.py -v
